@@ -1,16 +1,41 @@
-import telebot
-from telebot import types
+import os
+from dotenv import load_dotenv
+import json
+import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import datetime
+from telebot import TeleBot, types
+
+load_dotenv()
 
 TOKEN = '8141145532:AAHwme6p9d6WKmC08I0M-05AUV1AhJT9RiY'
-bot = telebot.TeleBot(TOKEN)
+bot = TeleBot(TOKEN)
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+creds_dict = {
+    "type": "service_account",
+    "project_id": os.getenv("GOOGLE_PROJECT_ID"),
+    "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
+    "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace('\\n', '\n'),
+    "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+    "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{os.getenv('GOOGLE_CLIENT_EMAIL').replace('@', '%40')}",
+    "universe_domain": "googleapis.com"
+}
 
-creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+with open("temp_credentials.json", "w") as f:
+    json.dump(creds_dict, f)
+
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive"
+]
+
+creds = ServiceAccountCredentials.from_json_keyfile_name("temp_credentials.json", scope)
 client = gspread.authorize(creds)
 sheet = client.open("Athlon Registration").sheet1
 
